@@ -1,5 +1,5 @@
 {
-    "name": "frm",
+    "name": "forum-test",
     "version": "1.0.0",
     "description": "Modern forum with Node.js, MongoDB, Socket.IO, Bootstrap",
     "main": "server.js",
@@ -28,3 +28,4 @@
         "nodemon": "^3.1.4"
     }
 }
+
