@@ -1,0 +1,107 @@
+<div class="d-flex justify-content-between align-items-center">
+  <h1 class="h4"><%= thread.title %></h1>
+  <div class="text-muted">
+    Started by <strong><%= thread.author?.username %></strong> ·
+    <small><%= new Date(thread.createdAt).toLocaleString() %></small>
+  </div>
+</div>
+
+<% if (thread.tags && thread.tags.length) { %>
+  <div class="mb-3">
+    <% thread.tags.forEach(tag => { %>
+      <span class="badge bg-secondary me-1"><%= tag %></span>
+    <% }) %>
+  </div>
+<% } %>
+
+<div id="posts" class="vstack gap-3">
+  <% posts.forEach(p => { %>
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div><strong><%= p.author?.username %></strong></div>
+          <small class="text-muted"><%= new Date(p.createdAt).toLocaleString() %></small>
+        </div>
+        <div class="mt-2">
+          <%= p.content %>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+<hr class="my-4">
+
+<% if (currentUser) { %>
+  <form id="postForm" class="card card-body">
+    <div class="mb-3">
+      <label class="form-label">Your reply</label>
+      <textarea id="content" name="content" rows="4" class="form-control" required></textarea>
+    </div>
+    <button class="btn btn-primary">Post Reply</button>
+    <div id="postError" class="text-danger mt-2 d-none"></div>
+  </form>
+<% } else { %>
+  <div class="alert alert-info">
+    <a href="/login?next=<%= encodeURIComponent('/threads/' + thread._id) %>">Log in</a> to reply.
+  </div>
+<% } %>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const THREAD_ID = "<%= thread._id %>";
+  const socket = io();
+  socket.emit('join-thread', THREAD_ID);
+
+  const postsEl = document.getElementById('posts');
+
+  socket.on('new-post', (data) => {
+    if (data.threadId !== THREAD_ID) return;
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div><strong>${data.author?.username || 'User'}</strong></div>
+          <small class="text-muted">${new Date(data.createdAt).toLocaleString()}</small>
+        </div>
+        <div class="mt-2"></div>
+      </div>`;
+    const contentDiv = card.querySelector('.mt-2');
+    contentDiv.textContent = data.content; // safe
+    postsEl.appendChild(card);
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  });
+
+  const postForm = document.getElementById('postForm');
+  if (postForm) {
+    postForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = postForm.querySelector('button');
+      const errorEl = document.getElementById('postError');
+      errorEl.classList.add('d-none');
+      btn.disabled = true;
+      try {
+        const content = document.getElementById('content').value.trim();
+        if (!content) { throw new Error('Please write something'); }
+        const res = await fetch(`/threads/${THREAD_ID}/posts`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ content })
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || !json.ok) throw new Error(json.message || 'Failed to post');
+        document.getElementById('content').value = '';
+      } catch (err) {
+        errorEl.textContent = err.message || 'Error';
+        errorEl.classList.remove('d-none');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+</script>

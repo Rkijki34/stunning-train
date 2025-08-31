@@ -1,0 +1,35 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Latest Threads</h1>
+  <% if (currentUser) { %>
+    <a class="btn btn-primary" href="/threads/new">+ New Thread</a>
+  <% } %>
+</div>
+
+<% if (typeof errorMsg === 'string' && errorMsg) { %>
+  <div class="alert alert-danger"><%= errorMsg %></div>
+<% } %>
+
+<% if (!threads.length) { %>
+  <div class="alert alert-info">No threads yet. Be the first to start one!</div>
+<% } %>
+
+<div class="list-group">
+  <% threads.forEach(t => { %>
+    <a href="/threads/<%= t._id %>" class="list-group-item list-group-item-action">
+      <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1"><%= t.title %></h5>
+        <small class="text-muted">Updated <%= new Date(t.updatedAt).toLocaleString() %></small>
+      </div>
+      <p class="mb-1 text-muted">
+        By <strong><%= t.author?.username %></strong>
+        <% if (t.tags && t.tags.length) { %>
+          &middot; Tags:
+          <% t.tags.forEach(tag => { %>
+            <span class="badge bg-secondary me-1"><%= tag %></span>
+          <% }) %>
+        <% } %>
+      </p>
+      <small class="text-muted"><%= counts[String(t._id)] || 0 %> posts</small>
+    </a>
+  <% }) %>
+</div>

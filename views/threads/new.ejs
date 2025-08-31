@@ -1,0 +1,25 @@
+<h1 class="h3 mb-3">Start a new thread</h1>
+
+<% if (errors.length) { %>
+  <div class="alert alert-danger">
+    <ul class="mb-0">
+      <% errors.forEach(e => { %><li><%= e.msg %></li><% }) %>
+    </ul>
+  </div>
+<% } %>
+
+<form method="post" action="/threads" class="card card-body">
+  <div class="mb-3">
+    <label class="form-label">Title</label>
+    <input name="title" class="form-control" maxlength="200" value="<%= values.title || '' %>" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Tags (comma separated, optional)</label>
+    <input name="tags" class="form-control" value="<%= values.tags || '' %>">
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Initial post (optional)</label>
+    <textarea name="content" rows="5" class="form-control"></textarea>
+  </div>
+  <button class="btn btn-primary">Create Thread</button>
+</form>
